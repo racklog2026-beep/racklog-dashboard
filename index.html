@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RackLog Command Console</title>
+<style>
+:root{--bg:#030713;--text:#f6fbff;--muted:#8c9ab9;--gold:#ffb42d;--gold-2:#ffd162;--cyan:#28d8ff;--green:#17f0b6;--purple:#c56eff;--danger:#ff607f;--shadow:0 28px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.03);--h:74px;--rg:;--rc:;--pct:;--vg:}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:radial-gradient(circle at 18% 14%,rgba(255,180,45,.11),transparent 22%),radial-gradient(circle at 82% 15%,rgba(40,216,255,.10),transparent 24%),radial-gradient(circle at 72% 84%,rgba(197,110,255,.10),transparent 26%),linear-gradient(180deg,#02040c 0%,#040917 50%,#030713 100%);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(74,95,150,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(74,95,150,.08) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at 50% 40%,rgba(0,0,0,1),rgba(0,0,0,.82) 42%,rgba(0,0,0,.25) 78%,transparent 100%);opacity:.38;pointer-events:none;animation:gridShift 22s linear infinite}
+body::after{content:"";position:fixed;inset:-20%;background:radial-gradient(600px 240px at 18% 22%,rgba(255,180,45,.07),transparent 60%),radial-gradient(640px 280px at 78% 24%,rgba(40,216,255,.06),transparent 60%),radial-gradient(760px 320px at 50% 90%,rgba(197,110,255,.05),transparent 65%);filter:blur(30px);animation:drift 18s ease-in-out infinite alternate;pointer-events:none}
+@keyframes gridShift{from{transform:translateY(0)}to{transform:translateY(18px)}}@keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(14px,-10px,0) scale(1.03)}}@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.28);opacity:.72}}@keyframes shimmer{0%{transform:translateX(-140%)}100%{transform:translateX(160%)}}@keyframes ringBreath{0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.05),0 0 26px var(--rg)}50%{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 34px var(--rg)}}@keyframes liveBar{0%{background-position:0% 50%}100%{background-position:120% 50%}}@keyframes valueGlow{0%,100%{text-shadow:0 0 18px rgba(255,255,255,.06)}50%{text-shadow:0 0 28px rgba(255,255,255,.14),0 0 50px var(--vg)}}@keyframes ringSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes scanLine{0%{top:-2%;opacity:0}5%{opacity:.018}95%{opacity:.012}100%{top:102%;opacity:0}}@keyframes cardEntrance{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes brandPulse{0%,100%{box-shadow:0 0 18px rgba(255,180,45,.35)}50%{box-shadow:0 0 28px rgba(255,180,45,.55),0 0 50px rgba(255,180,45,.18)}}@keyframes feedPop{0%{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.page{max-width:1800px;margin:0 auto;padding:18px 22px 30px;min-height:100vh;position:relative;z-index:1}
+.topbar{height:var(--h);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;margin-bottom:18px;padding:0 12px;border-radius:26px;background:linear-gradient(180deg,rgba(7,12,24,.82),rgba(5,9,18,.92));border:1px solid rgba(122,146,215,.14);box-shadow:var(--shadow);backdrop-filter:blur(20px);position:sticky;top:12px;z-index:20}
+.brand{display:flex;align-items:center;gap:12px;min-width:240px}.brand-mark{width:8px;height:30px;border-radius:999px;background:linear-gradient(180deg,var(--gold-2),#ff9c10);box-shadow:0 0 18px rgba(255,180,45,.35);animation:brandPulse 4s ease-in-out infinite}.brand-name{font-weight:800;font-size:1.15rem;letter-spacing:-.03em;line-height:1}.brand-sub{margin-top:4px;font-size:.72rem;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+.nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.nav-btn{border:none;color:#aab6d3;background:transparent;padding:11px 16px;border-radius:14px;font-weight:600;letter-spacing:.02em;cursor:pointer;transition:.25s ease}.nav-btn:hover{color:#fff;background:rgba(255,255,255,.04)}.nav-btn.active{background:linear-gradient(180deg,rgba(255,180,45,.18),rgba(255,180,45,.08));color:#ffdf9c;box-shadow:inset 0 0 0 1px rgba(255,180,45,.25),0 8px 18px rgba(255,180,45,.08),0 0 24px rgba(255,180,45,.12)}
+.status-pill{justify-self:end;display:inline-flex;align-items:center;gap:10px;padding:11px 16px;border-radius:999px;background:linear-gradient(180deg,rgba(8,31,24,.92),rgba(7,22,18,.9));border:1px solid rgba(23,240,182,.22);color:#bfffe9;font-size:.84rem;letter-spacing:.18em;text-transform:uppercase;box-shadow:inset 0 0 24px rgba(23,240,182,.06),0 0 22px rgba(23,240,182,.08)}.status-dot{width:9px;height:9px;border-radius:999px;background:var(--green);box-shadow:0 0 16px var(--green);animation:pulse 1.8s infinite}
+.hero-shell{position:relative;border-radius:34px;padding:22px;background:linear-gradient(180deg,rgba(10,16,31,.82),rgba(5,10,19,.92));border:1px solid rgba(122,146,215,.14);box-shadow:0 36px 120px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);display:grid;align-items:start;overflow:hidden;backdrop-filter:blur(20px)}.hero-shell::before{content:"";position:absolute;inset:0;background:radial-gradient(800px 220px at 50% 0%,rgba(255,180,45,.10),transparent 46%),radial-gradient(400px 180px at 78% 0%,rgba(40,216,255,.10),Transparent 42%),radial-gradient(380px 140px at 25% 100%,rgba(197,110,255,.08),transparent 44%);pointer-events:none}.hero-shell::after{content:"";position:absolute;left:4%;right:4%;top:-56px;height:112px;border-radius:50%;border-top:1px solid rgba(255,255,255,.07);opacity:.48;pointer-events:none}.scan-overlay{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,180,45,.06),rgba(40,216,255,.04),transparent);animation:scanLine 12s ease-in-out infinite;pointer-events:none;z-index:2}
+.dashboard{position:relative;z-index:1;display:grid;grid-template-columns:220px minmax(0,12fr) 260px;gap:20px}.left-col,.center-col,.right-col{display:grid;gap:18px;align-content:start}.stat-row{grid-column:1 / -1;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{position:relative;background:linear-gradient(180deg,rgba(9,14,28,.70),rgba(6,10,20,.88));border:1px solid rgba(138,160,225,.14);border-radius:24px;box-shadow:var(--shadow);backdrop-filter:blur(18px);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;animation:cardEntrance .5s ease-out both}.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.10s}.card:nth-child(3){animation-delay:.15s}.card:nth-child(4){animation-delay:.20s}.card:hover{transform:translateY(-3px);box-shadow:0 34px 88px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.04),0 0 20px rgba(40,216,255,.06);border-color:rgba(166,187,255,.18)}.card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 24%);pointer-events:none}.card::after{content:"";position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.065),transparent);transform:translateX(-140%);opacity:.25;animation:shimmer 11s ease-in-out infinite;pointer-events:none}
+.hud .corner{position:absolute;width:14px;height:14px;border-color:rgba(255,180,45,.45);opacity:.65;pointer-events:none}.hud .tl{top:10px;left:10px;border-top:1px solid;border-left:1px solid}.hud .tr{top:10px;right:10px;border-top:1px solid;border-right:1px solid}.hud .bl{bottom:10px;left:10px;border-bottom:1px solid;border-left:1px solid}.hud .br{bottom:10px;right:10px;border-bottom:1px solid;border-right:1px solid}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.05)}.section-title-left{display:flex;align-items:center;gap:10px;color:#f3f9ff;font-weight:700;letter-spacing:.28em;text-transform:uppercase;font-size:.78rem}.tiny-dot{width:8px;height:8px;border-radius:999px;background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:pulse 2.3s infinite}.view-btn{background:none;border:none;color:var(--purple);font-weight:700;cursor:pointer;font-size:.95rem;transition:.2s ease}.view-btn:hover{color:#ebbfff;text-shadow:0 0 12px rgba(197,110,255,.28)}
+.stat-card{padding:24px 32px 22px;min-height:120px;display:flex;align-items:center;justify-content:space-between;gap:24px;overflow:visible!important}.stat-meta{display:flex;flex-direction:column;gap:7px}.eyebrow{font-size:.64rem;letter-spacing:.38em;text-transform:uppercase;color:rgba(255,194,79,.76);font-weight:700}.eyebrow.cyan{color:rgba(40,216,255,.76)}.eyebrow.green{color:rgba(23,240,182,.76)}.value{font-size:3.25rem;line-height:.9;letter-spacing:-.06em;font-weight:800;animation:valueGlow 5s ease-in-out infinite}.value.gold{color:var(--gold);--vg:rgba(255,180,45,.35)}.value.cyan{color:var(--cyan);--vg:rgba(40,216,255,.35)}.value.green{color:var(--green);--vg:rgba(23,240,182,.35)}.value:not(.gold):not(.cyan):not(.green){--vg:rgba(255,255,255,.12)}.sub{font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;color:var(--muted)}
+.ring{width:88px;height:88px;border-radius:50%;position:relative;flex:0 0 auto;background:conic-gradient(var(--rc) calc(var(--pct) * 1%),rgba(255,255,255,.08) 0);box-shadow:0 0 0 1px rgba(255,255,255,.05),0 0 24px var(--rg);animation:ringBreath 3s ease-in-out infinite;--rg:rgba(255,180,45,.24);--rc:var(--gold);--pct:88}.ring::before{content:"";position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.08),rgba(6,10,18,.95) 60%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}.ring::after{content:"";position:absolute;inset:4px;border-radius:50%;background:conic-gradient(transparent 0deg,rgba(255,255,255,.12) 60deg,transparent 120deg);animation:ringSpin 8s linear infinite;opacity:.5}.ring span{position:absolute;inset:0;display:grid;place-items:center;font-size:.84rem;font-weight:800;z-index:1}
+
+.actions-card{padding:18px 16px}.action-list{display:grid;gap:10px}.action-btn{width:100%;display:flex;align-items:center;gap:12px;padding:14px 14px;min-height:54px;background:rgba(255,255,255,.02);color:#dbe5ff;border:1px solid transparent;border-radius:16px;font-size:1rem;font-weight:600;text-align:left;cursor:pointer;transition:.22s ease}.action-btn:hover{background:rgba(255,255,255,.04)}.action-btn.active{background:linear-gradient(180deg,rgba(255,180,45,.12),rgba(255,180,45,.05));border-color:rgba(255,180,45,.24);box-shadow:inset 3px 0 0 var(--gold),0 0 22px rgba(255,180,45,.08);color:#fff5de}.action-bullet{width:8px;height:8px;border-radius:999px;background:rgba(180,191,225,.55);flex-shrink:0}.action-btn.active .action-bullet{background:var(--gold);box-shadow:0 0 12px rgba(255,180,45,.44)}
+.performance-card,.activity-card{padding:18px 20px}.performance-list{display:grid;gap:14px}.metric-row{display:grid;grid-template-columns:1fr 4.8fr auto;gap:14px;align-items:center;color:#dce5ff;font-size:.83rem;letter-spacing:.20em;text-transform:uppercase;font-weight:700}.bar{position:relative;height:8px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.07)}.fill{position:relative;height:100%;border-radius:inherit;box-shadow:0 0 14px currentColor;background-size:200% 100% !important;animation:liveBar 4s linear infinite}
+.feed-list{display:grid;gap:0}.feed-item{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);animation:feedPop .3s ease-out both}.feed-item:last-child{border-bottom:none}.feed-icon{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:.92rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 0 12px rgba(255,255,255,.03)}.feed-icon.live{background:rgba(23,240,182,.10);border-color:rgba(23,240,182,.18)}.feed-icon.warn{background:rgba(255,180,45,.10);border-color:rgba(255,180,45,.18)}.feed-icon.info{background:rgba(40,216,255,.10);border-color:rgba(40,216,255,.18)}.feed-icon.note{background:rgba(197,110,255,.10);border-color:rgba(197,110,255,.18)}.feed-text{font-size:1.02rem;color:#f1f7ff}.badge{padding:7px 11px;border-radius:999px;font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);color:#dbe6ff;background:rgba(255,255,255,.03);white-space:nowrap;font-weight:800}.badge.green{background:rgba(23,240,182,.08);border-color:rgba(23,240,182,.18);color:#beffe9}.badge.gold{background:rgba(255,180,45,.08);border-color:rgba(255,180,45,.2);color:#ffe2a4}.badge.cyan{background:rgba(40,216,255,.08);border-color:rgba(40,216,255,.18);color:#d1f8ff}.badge.purple{background:rgba(197,110,255,.08);border-color:rgba(197,110,255,.18);color:#f0d1ff}
+.feature-card{padding:20px;min-height:272px;display:flex;flex-direction:column;justify-content:space-between;border-radius:26px;overflow:hidden}.momentum{background:radial-gradient(circle at 0% 50%,rgba(23,240,182,.15),transparent 34%),linear-gradient(135deg,rgba(6,90,66,.82),rgba(5,29,34,.76));border:1px solid rgba(23,240,182,.20);box-shadow:inset 0 0 36px rgba(23,240,182,.06),0 24px 50px rgba(0,0,0,.36)}.milestone{background:radial-gradient(circle at 0% 50%,rgba(197,110,255,.14),transparent 34%),linear-gradient(135deg,rgba(78,28,112,.84),rgba(29,18,58,.78));border:1px solid rgba(197,110,255,.18);box-shadow:inset 0 0 36px rgba(197,110,255,.05),0 24px 50px rgba(0,0,0,.36)}.feature-top{display:flex;align-items:flex-start;gap:14px}.icon-wrap{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}.title-sm{font-size:.64rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:800;margin-bottom:10px}.feature-title{font-size:1.15rem;line-height:1.12;margin:0 0 10px;font-weight:800}.feature-desc{color:rgba(233,241,255,.76);font-size:.98rem;line-height:1.45}.big-number{margin-left:auto;font-size:3rem;line-height:.9;font-weight:900;letter-spacing:-.06em}.big-number small{display:block;margin-top:6px;font-size:.68rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(255,255,255,.68);font-weight:700}
+.priority-card{padding:18px 18px 16px;min-height:272px}.priority-list{display:grid;gap:10px}.priority-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:12px 12px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}.prio-dot{width:10px;height:10px;border-radius:999px}.priority-item strong{font-size:.98rem}.priority-item span{font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.panel{display:none;opacity:0;transform:translateY(6px);transition:opacity .22s ease,transform .22s ease}.panel.active{display:grid;opacity:1;transform:translateY(0);align-self:start}
+.modal{position:fixed;inset:0;background:rgba(2,6,14,.62);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}.modal.show{display:flex}.modal-card{width:min(760px,100%);background:linear-gradient(180deg,rgba(12,18,35,.95),rgba(7,12,24,.96));border:1px solid rgba(142,165,232,.16);border-radius:28px;box-shadow:0 40px 120px rgba(0,0,0,.55);overflow:hidden;animation:modalIn .3s ease-out}.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}.modal-title{font-size:1.06rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.close-btn{border:none;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;width:38px;height:38px;border-radius:12px;transition:background .2s ease}.close-btn:hover{background:rgba(255,255,255,.10)}.modal-body{padding:20px;color:#dbe6ff;line-height:1.6}.detail-list{display:grid;gap:12px}.detail-item{padding:14px 14px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}.footer-note{margin-top:14px;color:#6f7c9c;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;text-align:center}
+@media(max-width:1320px){.dashboard{grid-template-columns:1fr}.stat-row{grid-template-columns:repeat(2,1fr)}.left-col,.center-col,.right-col{grid-column:1/-1}.right-col{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:980px){.topbar{grid-template-columns:1fr;height:auto;padding:14px}.status-pill{justify-self:start}.nav{justify-content:flex-start}.stat-row{grid-template-columns:1fr}.right-col{grid-template-columns:1fr}.dashboard{gap:16px}}
+
+.module-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.module-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);font-size:.85em;color:#8a9ab5;cursor:pointer;transition:background .2s}
+.module-item:hover,.module-item.active{background:rgba(255,255,255,.07);color:#f3f9ff}
+.module-item.active{font-weight:600}
+.module-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sys-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:.82em;color:#8a9ab5;border-bottom:1px solid rgba(255,255,255,.04)}
+.readiness-item{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.readiness-label{flex:0 0 80px;font-size:.8em;color:#8a9ab5;text-align:right}
+.readiness-bar{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.readiness-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.readiness-pct{flex:0 0 36px;font-size:.78em;color:#8a9ab5;text-align:right}
+.checklist{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.check-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:.82em;color:#6b7fa3;transition:background .2s}
+.check-item:hover{background:rgba(255,255,255,.04)}
+.check-item.done{color:#17f0b6}
+.check-item span.chk{flex-shrink:0;width:20px;text-align:center;font-size:1.3em;line-height:1}
+.module-detail{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.82em}
+.module-detail:last-child{border-bottom:none}
+.module-detail strong{color:#f3f9ff;font-weight:600}
+.launcher-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;width:100%;grid-column:1/-1;grid-row:2;box-sizing:border-box;min-width:0;align-self:start}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="topbar">
+<div class="brand"><div class="brand-mark"></div><div><div class="brand-name">RackLog</div><div class="brand-sub">Mission Console</div></div></div>
+<nav class="nav" id="topNav">
+<button class="nav-btn active" data-panel="overview">Overview</button>
+<button class="nav-btn" data-panel="launcher">App Launcher</button>
+<button class="nav-btn" data-panel="county">County Agent</button>
+<button class="nav-btn" data-panel="business">Business</button>
+<button class="nav-btn" data-panel="ideas">Ideas</button>
+</nav>
+<div class="status-pill"><span class="status-dot"></span> System Online</div>
+</header>
+<section class="hero-shell">
+<div class="scan-overlay"></div>
+
+<div class="dashboard panel active" id="panel-overview">
+<div class="stat-row">
+<section class="card stat-card hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="stat-meta"><div class="eyebrow cyan">States</div><div class="value cyan">17</div><div class="sub">of 50 states</div></div><div class="ring" style="--pct:34;--rg:rgba(40,216,255,.22);--rc:var(--cyan)"><span>34%</span></div></section>
+<section class="card stat-card hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="stat-meta"><div class="eyebrow green">AI Agents</div><div class="value green">1</div><div class="sub">of 1 agent</div></div><div class="ring" style="--pct:100;--rg:rgba(23,240,182,.22);--rc:var(--green)"><span>100%</span></div></section>
+<section class="card stat-card hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="stat-meta"><div class="eyebrow gold">Days to Launch</div><div class="value gold">107</div><div class="sub">July 30, 2026</div></div><div class="ring" style="--pct:40;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>40%</span></div></section>
+<section class="card stat-card hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="stat-meta"><div class="eyebrow green">App Features</div><div class="value green">11</div><div class="sub">of 11 Total</div></div><div class="ring" style="--pct:100;--rg:rgba(23,240,182,.22);--rc:var(--green)"><span>100%</span></div></section>
+</div>
+<div class="left-col">
+<section class="card priority-card hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="section-title"><div class="section-title-left"><span class="tiny-dot" style="background:var(--purple);box-shadow:0 0 12px var(--purple)"></span>Priority List</div></div><div class="priority-list"><div class="priority-item"><div class="prio-dot" style="background:var(--gold)"></div><strong>Finish HuntMaps separation</strong><span>High</span></div><div class="priority-item"><div class="prio-dot" style="background:var(--gold)"></div><strong>Polish RackCast destination tile</strong><span>High</span></div><div class="priority-item"><div class="prio-dot" style="background:var(--cyan)"></div><strong>Business launch workflow</strong><span>Medium</span></div><div class="priority-item"><div class="prio-dot" style="background:var(--cyan)"></div><strong>Prep App Store compliance</strong><span>Queued</span></div></div></section>
+</div>
+<div class="center-col">
+<section class="card performance-card hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Data Stream Performance</div><button class="view-btn" data-modal="performance">View All</button></div><div class="performance-list"><div class="metric-row"><div>App Dev</div><div class="bar"><div class="fill" style="width:85%;color:var(--gold);background:linear-gradient(90deg,#ffb42d,#ffd162,#ffb42d)"></div></div><div>85%</div></div><div class="metric-row"><div>GIS Data</div><div class="bar"><div class="fill" style="width:62%;color:var(--cyan);background:linear-gradient(90deg,#20d6ff,#64f1ff,#20d6ff)"></div></div><div>62%</div></div><div class="metric-row"><div>AI Agents</div><div class="bar"><div class="fill" style="width:45%;color:var(--purple);background:linear-gradient(90deg,#b952ff,#d990ff,#b952ff)"></div></div><div>45%</div></div><div class="metric-row"><div>Launch Prep</div><div class="bar"><div class="fill" style="width:78%;color:var(--green);background:linear-gradient(90deg,#0ee7aa,#6dffd6,#0ee7aa)"></div></div><div>78%</div></div><div class="metric-row"><div>Biz Dev</div><div class="bar"><div class="fill" style="width:33%;color:var(--gold);background:linear-gradient(90deg,#ff9f10,#ffbf52,#ff9f10)"></div></div><div>33%</div></div></div></section>
+<section class="card activity-card hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Live Feed Activity</div><button class="view-btn" data-modal="activity">View All</button></div><div class="feed-list"><div class="feed-item"><div class="feed-icon live">&#10003;</div><div class="feed-text">County Agent processed Jackson County</div><div class="badge green">Complete</div></div><div class="feed-item"><div class="feed-icon live">&#10003;</div><div class="feed-text">AI scoring model updated</div><div class="badge green">Complete</div></div><div class="feed-item"><div class="feed-icon warn">&#10022;</div><div class="feed-text">RackLog build submitted for review</div><div class="badge gold">In Progress</div></div><div class="feed-item"><div class="feed-icon info">&#9679;</div><div class="feed-text">Business Agent #1 initialized</div><div class="badge cyan">Active</div></div><div class="feed-item"><div class="feed-icon note">&#9829;</div><div class="feed-text">New user feedback received</div><div class="badge purple">New</div></div></div></section>
+</div>
+<div class="right-col">
+<section class="card feature-card momentum hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-top"><div class="icon-wrap">&#127794;</div><div><div class="title-sm">Momentum Win</div><h3 class="feature-title">50 Friends &amp; Family Ready to Switch</h3><div class="feature-desc">From ONX to RackLog at launch. Pre-qualified user base waiting.</div></div></div><div class="big-number" style="color:var(--green)">+50<small>Users</small></div></section>
+<section class="card feature-card milestone hud"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-top"><div class="icon-wrap">&#127919;</div><div><div class="title-sm">Next Milestone</div><h3 class="feature-title">Private Land GIS Pipeline</h3><div class="feature-desc">County Agent processing 17 states for offline boundary data.</div></div></div><div class="big-number" style="color:var(--purple)">17<small>States</small></div></section>
+
+</div>
+</div>
+
+<div class="dashboard panel" id="panel-launcher">
+<div class="stat-row">
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow green">Modules</div><div class="value green">11</div><div class="sub">of 11 Total</div></div><div class="ring" style="--pct:100;--rg:rgba(23,240,182,.22);--rc:var(--green)"><span>100%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow cyan">GIS Data</div><div class="value cyan">34</div><div class="sub">of 50 states</div></div><div class="ring" style="--pct:34;--rg:rgba(40,216,255,.22);--rc:var(--cyan)"><span>34%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow green">Active</div><div class="value green">1</div><div class="sub">AI agent</div></div><div class="ring" style="--pct:100;--rg:rgba(23,240,182,.22);--rc:var(--green)"><span>100%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow">Countdown</div><div class="value gold">107</div><div class="sub">days to launch</div></div><div class="ring" style="--pct:40;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>40%</span></div></section>
+</div>
+<div class="launcher-cols">
+<div class="left-col">
+<section class="card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>App Modules</div></div>
+<div class="module-list">
+<div class="module-item active"><span class="module-dot" style="background:var(--green)"></span>BuckTracker</div>
+<div class="module-item active"><span class="module-dot" style="background:var(--green)"></span>HuntMaps</div>
+<div class="module-item active"><span class="module-dot" style="background:var(--green)"></span>RackCast</div>
+<div class="module-item active"><span class="module-dot" style="background:var(--green)"></span>Trophy Room</div>
+<div class="module-item active"><span class="module-dot" style="background:var(--green)"></span>ScoutLog</div>
+<div class="module-item active"><span class="module-dot" style="background:var(--green)"></span>Weather Desk</div>
+<div class="module-item active"><span class="module-dot" style="background:var(--green)"></span>Permit Tracker</div>
+<div class="module-item"><span class="module-dot" style="background:var(--gold)"></span>Unit Insights</div>
+<div class="module-item"><span class="module-dot" style="background:var(--gold)"></span>Social Hunt</div>
+<div class="module-item"><span class="module-dot" style="background:var(--cyan)"></span>Lease Log</div>
+<div class="module-item"><span class="module-dot" style="background:var(--cyan)"></span>Harvest Journal</div>
+</div></section>
+<section class="card" style="margin-top:16px"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>System Status</div></div>
+<div class="sys-item"><span style="color:#17f0b6">&#9679;</span> Supabase <span style="color:#6b7fa3">connected</span></div>
+<div class="sys-item"><span style="color:#17f0b6">&#9679;</span> AI Agent <span style="color:#6b7fa3">operational</span></div>
+<div class="sys-item"><span style="color:#17f0b6">&#9679;</span> App Modules <span style="color:#6b7fa3">11 active</span></div>
+</section>
+</div>
+<div class="center-col">
+<section class="card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Launch Readiness</div></div>
+<div class="launch-readiness">
+<div class="readiness-item"><span class="readiness-label">App Dev</span><div class="readiness-bar"><div class="readiness-fill" style="width:100%;background:var(--green)"></div></div><span class="readiness-pct">100%</span></div>
+<div class="readiness-item"><span class="readiness-label">GIS Data</span><div class="readiness-bar"><div class="readiness-fill" style="width:34%;background:var(--cyan)"></div></div><span class="readiness-pct">34%</span></div>
+<div class="readiness-item"><span class="readiness-label">AI Agents</span><div class="readiness-bar"><div class="readiness-fill" style="width:40%;background:var(--purple)"></div></div><span class="readiness-pct">40%</span></div>
+<div class="readiness-item"><span class="readiness-label">Launch Prep</span><div class="readiness-bar"><div class="readiness-fill" style="width:78%;background:var(--gold)"></div></div><span class="readiness-pct">78%</span></div>
+<div class="readiness-item"><span class="readiness-label">Biz Dev</span><div class="readiness-bar"><div class="readiness-fill" style="width:33%;background:var(--cyan)"></div></div><span class="readiness-pct">33%</span></div>
+</div></section>
+<section class="card" style="margin-top:16px"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Launch Checklist</div></div>
+<div class="checklist">
+<div class="check-item done"><span>&#10003;</span> BuckTracker scoring + gallery</div>
+<div class="check-item done"><span>&#10003;</span> HuntMaps public/private overlay</div>
+<div class="check-item done"><span>&#10003;</span> RackCast forecast intel</div>
+<div class="check-item done"><span>&#10003;</span> Trophy Room upload flow</div>
+<div class="check-item done"><span>&#10003;</span> ScoutLog field notes</div>
+<div class="check-item done"><span>&#10003;</span> Weather Desk integration</div>
+<div class="check-item done"><span>&#10003;</span> Permit Tracker reminders</div>
+<div class="check-item"><span>&#9744;</span> Unit Insights dashboard</div>
+<div class="check-item"><span>&#9744;</span> Social Hunt sharing</div>
+<div class="check-item"><span>&#9744;</span> County pipeline complete</div>
+<div class="check-item"><span>&#9744;</span> Launch day go-live</div>
+<div class="check-item"><span>&#9744;</span> Create TikTok account</div>
+<div class="check-item"><span>&#9744;</span> Create Instagram account</div>
+</div></section>
+</div>
+<div class="right-col">
+<section class="card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Module Details</div></div>
+<div class="module-detail"><strong>BuckTracker</strong><br/><span style="color:#8a9ab5;font-size:0.82em">AI deer scoring, gallery comparison, learning library</span></div>
+<div class="module-detail"><strong>HuntMaps</strong><br/><span style="color:#8a9ab5;font-size:0.82em">Public/private land overlays, saved spots, wind tools</span></div>
+<div class="module-detail"><strong>RackCast</strong><br/><span style="color:#8a9ab5;font-size:0.82em">Forecast-style hunting intel destination</span></div>
+<div class="module-detail"><strong>Trophy Room</strong><br/><span style="color:#8a9ab5;font-size:0.82em">Photo gallery, buck scoring, achievement tracking</span></div>
+</section>
+</div>
+</div>
+</div>
+
+<div class="dashboard panel" id="panel-county">
+<div class="stat-row">
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow cyan">Counties</div><div class="value cyan">1</div><div class="sub">of 1,387 counties</div></div><div class="ring" style="--pct:1;--rg:rgba(40,216,255,.22);--rc:var(--cyan)"><span>1%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow gold">WI Counties</div><div class="value gold">1</div><div class="sub">of 74 counties</div></div><div class="ring" style="--pct:2;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>2%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow gold">Priority</div><div class="value gold">WI</div><div class="sub">1 of 74 counties</div></div><div class="ring" style="--pct:2;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>2%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow green">Pipeline</div><div class="value green">1</div><div class="sub">of 74 WI counties</div></div><div class="ring" style="--pct:30;--rg:rgba(23,240,182,.22);--rc:var(--green)"><span>30%</span></div></section>
+</div>
+<div class="center-col" style="grid-column:1 / span 2"><section class="card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>County Pipeline</div></div><div class="checklist"><div class="check-item"><span class="chk" style="color:#17f0b6">&#10003;</span><strong>Jackson County</strong> <span style="color:#17f0b6;margin-left:auto;font-size:.8em">Complete</span></div><div class="check-item"><span class="chk" style="color:#ffb42d">&#9744;</span>Bayfield County <span style="color:#ffb42d;margin-left:auto;font-size:.8em">Next</span></div><div class="check-item"><span class="chk" style="color:#ffb42d">&#9744;</span>Sawyer County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div><div class="check-item"><span class="chk" style="color:#ffb42d">&#9744;</span>Vilas County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div><div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span>Lincoln County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div><div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span>Oneida County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div><div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span>Price County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div><div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span>Forest County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div><div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span>Florence County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div><div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span>Iron County <span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Queued</span></div></div></section></div>
+
+</div>
+
+<div class="dashboard panel" id="panel-business">
+<div class="stat-row">
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow cyan">Subscribers</div><div class="value cyan">0</div><div class="sub">pre-launch</div></div><div class="ring" style="--pct:0;--rg:rgba(40,216,255,.22);--rc:var(--cyan)"><span>0%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow gold">Users</div><div class="value gold">0</div><div class="sub">beta waitlist</div></div><div class="ring" style="--pct:0;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>0%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow">Days to Launch</div><div class="value gold">107</div><div class="sub">July 30, 2026</div></div><div class="ring" style="--pct:40;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>40%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow green">Revenue</div><div class="value green">$0</div><div class="sub">MRR pre-launch</div></div><div class="ring" style="--pct:0;--rg:rgba(23,240,182,.22);--rc:var(--green)"><span>0%</span></div></section>
+</div>
+<div class="center-col" style="grid-column:1 / span 2"><section class="card performance-card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Growth Priorities</div><button class="view-btn" data-modal="business">View All</button></div><div class="detail-list"><div class="detail-item"><strong><span style="color:#ffb42d">&#8594;</span> Pro Team Sponsorships</strong><br/><span style="color:#8a9ab5;font-size:0.8em">Whitetail hunting teams in WI, IA, MN — build audience trust early</span></div><div class="detail-item"><strong><span style="color:#ffb42d">&#8594;</span> Podcast Ads</strong><br/><span style="color:#8a9ab5;font-size:0.8em">Outdoor shows — Meateater, drawn-to-hunt, bowhungr</span></div><div class="detail-item"><strong><span style="color:#ffb42d">&#8594;</span> SEO Content</strong><br/><span style="color:#8a9ab5;font-size:0.8em">Public land hunting guides by county — organic search growth</span></div><div class="detail-item"><strong><span style="color:#ffb42d">&#8594;</span> B2B Partnerships</strong><br/><span style="color:#8a9ab5;font-size:0.8em">Government agencies, outfitters, hunting clubs — bulk data sales</span></div><div class="detail-item"><strong><span style="color:#ffb42d">&#8594;</span> Referral Program</strong><br/><span style="color:#8a9ab5;font-size:0.8em">Hunter network effects — incentivize early adopters to share</span></div></div></section></div>
+</div>
+
+<div class="dashboard panel" id="panel-ideas">
+<div class="stat-row">
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow cyan">Ideas</div><div class="value cyan">10</div><div class="sub">tracked</div></div><div class="ring" style="--pct:100;--rg:rgba(40,216,255,.22);--rc:var(--cyan)"><span>100%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow gold">In Progress</div><div class="value gold">0</div><div class="sub">pre-launch</div></div><div class="ring" style="--pct:0;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>0%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow green">Top Tier</div><div class="value green">4</div><div class="sub">A-rank ideas</div></div><div class="ring" style="--pct:40;--rg:rgba(23,240,182,.22);--rc:var(--green)"><span>40%</span></div></section>
+<section class="card stat-card"><div class="stat-meta"><div class="eyebrow">MVP Target</div><div class="value gold">90</div><div class="sub">days avg</div></div><div class="ring" style="--pct:50;--rg:rgba(255,180,45,.22);--rc:var(--gold)"><span>50%</span></div></section>
+</div>
+<div class="launcher-cols" style="grid-template-columns:1fr 1.2fr 0.8fr">
+<div class="left-col">
+<section class="card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Business Ideas</div></div>
+<div class="checklist">
+<div class="check-item"><span class="chk" style="color:#17f0b6">&#9744;</span><strong>FB Marketplace Flip</strong><span style="color:#17f0b6;margin-left:auto;font-size:.8em">Fastest ROI</span></div>
+<div class="check-item"><span class="chk" style="color:#17f0b6">&#9744;</span><strong>Hunting Clothing Line</strong><span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Brand ext.</span></div>
+<div class="check-item"><span class="chk" style="color:#ffb42d">&#9744;</span><strong>TikTok Content Agent</strong><span style="color:#ffb42d;margin-left:auto;font-size:.8em">AI-powered</span></div>
+</div></section>
+<section class="card" style="margin-top:14px"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Why First</div></div>
+<div style="font-size:.8em;color:#8a9ab5;line-height:1.6;margin-top:4px">FB flip requires no dev — cash flow in days. Fishing app reuses RackLog code — fastest path to second product.</div></section>
+</div>
+<div class="center-col">
+<section class="card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>App Concepts</div></div>
+<div class="checklist">
+<div class="check-item"><span class="chk" style="color:#ffb42d">&#9744;</span><strong>RackLog Fishing</strong><span style="color:#ffb42d;margin-left:auto;font-size:.8em">MVP: 45 days</span></div>
+<div class="check-item"><span class="chk" style="color:#ffb42d">&#9744;</span><strong>ChoreChamp</strong><span style="color:#ffb42d;margin-left:auto;font-size:.8em">MVP: 30 days</span></div>
+<div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span><strong>VacayPlanner</strong><span style="color:#28d8ff;margin-left:auto;font-size:.8em">MVP: 60 days</span></div>
+<div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span><strong>BarHopper</strong><span style="color:#28d8ff;margin-left:auto;font-size:.8em">MVP: 45 days</span></div>
+</div></section>
+<section class="card" style="margin-top:14px"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>RackLog Fishing</div></div>
+<div style="font-size:.8em;color:#8a9ab5;line-height:1.6;margin-top:4px">Reuses HuntMaps, Trophy Room, weather intel. Fish species ID, spot logging, casting forecasts. $14.99/mo same as RackLog.</div></section>
+</div>
+<div class="right-col">
+<section class="card"><div class="section-title"><div class="section-title-left"><span class="tiny-dot"></span>Future Concepts</div></div>
+<div class="checklist">
+<div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span><strong>SurvivalGame</strong><span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Game/App</span></div>
+<div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span><strong>ClassFields Pro</strong><span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Niche tool</span></div>
+<div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span><strong>PhotoRestore</strong><span style="color:#6b7fa3;margin-left:auto;font-size:.8em">AI + photo</span></div>
+<div class="check-item"><span class="chk" style="color:#28d8ff">&#9744;</span><strong>SurrogatePick</strong><span style="color:#6b7fa3;margin-left:auto;font-size:.8em">Data tool</span></div>
+</div></section>
+</div>
+</div>
+</div>
+<div class="modal" id="detailModal">
+<div class="modal-card">
+<div class="modal-head"><div class="modal-title" id="modalTitle">Details</div><button class="close-btn" id="closeModal">&#10005;</button></div>
+<div class="modal-body" id="modalBody"></div>
+</div>
+</div>
+
+<script>
+const navButtons=document.querySelectorAll(".nav-btn");
+const actionButtons=document.querySelectorAll(".action-btn[data-panel]");
+const panels=document.querySelectorAll(".panel");
+const modal=document.getElementById("detailModal");
+const modalTitle=document.getElementById("modalTitle");
+const modalBody=document.getElementById("modalBody");
+const closeModal=document.getElementById("closeModal");
+const modalContent={performance:{title:"Performance Detail",html:"<div class=detail-list><div class=detail-item><strong>App Dev</strong><br/>UI refinement, premium polish, and interaction layer.</div><div class=detail-item><strong>GIS Data</strong><br/>County-by-county ingestion, PAD-US cleanup, mobile optimization.</div><div class=detail-item><strong>AI Agents</strong><br/>County agent, business agent, and supporting workflows.</div><div class=detail-item><strong>Launch Prep</strong><br/>App Store readiness, feature packaging, and first-user experience.</div></div>"},activity:{title:"Activity Detail",html:"<div class=detail-list><div class=detail-item>County Agent completed Jackson County separation pass.</div><div class=detail-item>AI scoring model revision pushed to testing set.</div><div class=detail-item>Business Agent generated new launch tasks and growth prompts.</div><div class=detail-item>User feedback queue updated with UI polish requests.</div></div>"},launcher:{title:"App Launcher Modules",html:"<div class=detail-list><div class=detail-item><strong>BuckTracker</strong> &#8212; deer scoring, upload flows, learning library.</div><div class=detail-item><strong>HuntMaps</strong> &#8212; public/private overlays, saved hunt areas, wind tools.</div><div class=detail-item><strong>RackCast</strong> &#8212; cinematic prediction and destination feature.</div><div class=detail-item><strong>Trophy Room</strong> &#8212; premium collection and shareable hunt cards.</div></div>"},county:{title:"County Agent Detail",html:"<div class=detail-list><div class=detail-item>Target states: WI, MN, PA, IA, OH, NE, ND, SD, IL, KY, TN and future expansion.</div><div class=detail-item>Priority path: reliable county parcel ingestion + public/private separation + optimized mobile layers.</div><div class=detail-item>Goal: scalable offline-ready county processing pipeline.</div></div>"},business:{title:"Business Detail",html:"<div class=detail-list><div class=detail-item>Subscription strategy based on premium destination features and utility retention.</div><div class=detail-item>Brand extension ideas include RackLife and future apparel/media components.</div><div class=detail-item>Marketing channels include hunting podcasts, launch audience lists, and visual-first socials.</div></div>"},ideas:{title:"Idea Detail",html:"<div class=detail-list><div class=detail-item>Flagship website dashboard as a marketing differentiator.</div><div class=detail-item>Live map command center with wind, scent, and activity overlays.</div><div class=detail-item>Premium cinematic home screen with hunting visuals and destination UX.</div></div>"}};
+function setActivePanel(panelName){panels.forEach(p=>p.classList.toggle("active",p.id==="panel-"+panelName));navButtons.forEach(b=>b.classList.toggle("active",b.dataset.panel===panelName));actionButtons.forEach(b=>b.classList.toggle("active",b.dataset.panel===panelName))}
+navButtons.forEach(b=>{b.addEventListener("click",()=>setActivePanel(b.dataset.panel))});
+actionButtons.forEach(b=>{b.addEventListener("click",()=>setActivePanel(b.dataset.panel))});
+document.querySelectorAll("[data-modal]").forEach(b=>{b.addEventListener("click",()=>{const k=b.dataset.modal;const item=modalContent[k];if(!item)return;modalTitle.textContent=item.title;modalBody.innerHTML=item.html;modal.classList.add("show")})});
+closeModal.addEventListener("click",()=>modal.classList.remove("show"));
+modal.addEventListener("click",e=>{if(e.target===modal)modal.classList.remove("show")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")modal.classList.remove("show")});
+setActivePanel("overview");
+</script>
+</body>
+</html>
